@@ -19,7 +19,7 @@ public class JobController {
     private final JobService jobService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<JobResponse>> createJob(JobRequest request) {
+    public ResponseEntity<ApiResponse<JobResponse>> createJob(@RequestBody JobRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(jobService.createJob(request));
     }
 

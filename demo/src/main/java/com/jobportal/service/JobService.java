@@ -9,6 +9,10 @@ import com.jobportal.repository.JobRepository;
 import com.jobportal.repository.UserRepository;
 import com.jobportal.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -43,11 +47,16 @@ public class JobService {
 
     }
 
-    public ApiResponse<List<JobResponse>> getAllJobs() {
-       List<JobResponse> jobs = jobRepository.findAll()
-               .stream()
-               .map(this::mapToResponse)//.map(job -> mapToResponse(job))
-               .toList();
+    public ApiResponse<Page<JobResponse>> getAllJobs(int page, int size, String sortBy, String direction) {
+
+        Sort sort = direction.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+       Page<JobResponse> jobs = jobRepository.findAll(pageable)
+               .map(this::mapToResponse);//.map(job -> mapToResponse(job))
+
        return ApiResponse.success("Jobs fetched successfully", jobs);
     }
 
@@ -58,23 +67,24 @@ public class JobService {
 
     }
 
-    public ApiResponse<List<JobResponse>> searchJobs(String keyword, String location) {
+    public ApiResponse<Page<JobResponse>> searchJobs(String keyword, String location, int page, int size) {
 
-        List<Job> jobs;
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Job> jobs;
 
         if(keyword !=null && location != null) {
-            jobs = jobRepository.findByTitleContainingIgnoreCaseAndLocationContainingIgnoreCase(keyword, location);
+            jobs = jobRepository.findByTitleContainingIgnoreCaseAndLocationContainingIgnoreCase(keyword, location, pageable);
         }
         else if(keyword != null) {
-            jobs = jobRepository.findByTitleContainingIgnoreCase(keyword);
+            jobs = jobRepository.findByTitleContainingIgnoreCase(keyword, pageable);
         }
         else if(location != null) {
-            jobs = jobRepository.findByLocationContainingIgnoreCase(location);
+            jobs = jobRepository.findByLocationContainingIgnoreCase(location, pageable);
         }
         else{
-            jobs = jobRepository.findAll();
+            jobs = jobRepository.findAll(pageable);
         }
-        return ApiResponse.success("Jobs fetched successfully", jobs.stream().map(this::mapToResponse).toList());
+        return ApiResponse.success("Jobs fetched successfully", jobs.map(this::mapToResponse));
     }
 
     private JobResponse mapToResponse(Job job) {

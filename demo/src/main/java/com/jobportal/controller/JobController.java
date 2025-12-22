@@ -5,6 +5,7 @@ import com.jobportal.dto.JobResponse;
 import com.jobportal.response.ApiResponse;
 import com.jobportal.service.JobService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,8 +25,8 @@ public class JobController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<JobResponse>>> getAllJobs() {
-        return ResponseEntity.ok(jobService.getAllJobs());
+    public ResponseEntity<ApiResponse<Page<JobResponse>>> getAllJobs(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size, @RequestParam(defaultValue = "createdAt") String sortBy, @RequestParam(defaultValue = "desc") String sortDirection) {
+        return ResponseEntity.ok(jobService.getAllJobs(page, size, sortBy, sortDirection));
     }
 
     @GetMapping("/{jobId}")
@@ -34,8 +35,8 @@ public class JobController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<List<JobResponse>>> search(@RequestParam(required = false) String keyword, @RequestParam(required = false) String location) {
-        return ResponseEntity.ok(jobService.searchJobs(keyword, location));
+    public ResponseEntity<ApiResponse<Page<JobResponse>>> search(@RequestParam(required = false) String keyword, @RequestParam(required = false) String location, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size ) {
+        return ResponseEntity.ok(jobService.searchJobs(keyword, location, page, size ));
     }
 
 }

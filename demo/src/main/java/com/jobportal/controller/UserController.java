@@ -29,9 +29,8 @@ public class UserController {
     }
 
     @PostMapping("login")
-    public ResponseEntity<ApiResponse<Void>> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<String>> login(@RequestBody LoginRequest request) {
 
         return ResponseEntity.ok(userService.login(request));
     }
-
 }

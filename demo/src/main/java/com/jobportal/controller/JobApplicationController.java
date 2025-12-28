@@ -7,47 +7,39 @@ import com.jobportal.response.ApiResponse;
 import com.jobportal.service.JobApplicationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
 @RestController
 @RequestMapping("/api/applications")
 @RequiredArgsConstructor
 public class JobApplicationController {
 
-    private final JobApplicationService jobApplicationService;
+    private final JobApplicationService applicationService;
 
-    @PreAuthorize("hasRole('ROLE_JOB_SEEKER')")
     @PostMapping
-    public ResponseEntity<ApiResponse<Void>> apply(@RequestBody ApplyJobRequest request) {
-        return ResponseEntity.ok(jobApplicationService.apply(request));
+    public ResponseEntity<ApiResponse<String>> applyJob(
+            @RequestBody ApplyJobRequest request) {
+        return ResponseEntity.ok(applicationService.applyForJob(request));
     }
 
-    // CONSIDER: Remove userId from path and get from JWT instead
-    // Or keep it but add authorization check in service
     @GetMapping("/user/{userId}")
-    public ResponseEntity<ApiResponse<List<ApplicationResponse>>> getByUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(jobApplicationService.getApplicationByUser(userId));
-    }
-
-    // Better alternative: Get current user's applications without userId in path
-    @GetMapping("/my-applications")
-    public ResponseEntity<ApiResponse<List<ApplicationResponse>>> getMyApplications() {
-        // Service layer will extract user from JWT
-        return ResponseEntity.ok(jobApplicationService.getMyApplications());
+    public ResponseEntity<ApiResponse<List<ApplicationResponse>>> getByUser(
+            @PathVariable Long userId) {
+        return ResponseEntity.ok(applicationService.getApplicationsByUser(userId));
     }
 
     @GetMapping("/job/{jobId}")
-    public ResponseEntity<ApiResponse<List<ApplicationResponse>>> getByJob(@PathVariable Long jobId) {
-        return ResponseEntity.ok(jobApplicationService.getApplicationByJob(jobId));
+    public ResponseEntity<ApiResponse<List<ApplicationResponse>>> getByJob(
+            @PathVariable Long jobId) {
+        return ResponseEntity.ok(applicationService.getApplicationsByJob(jobId));
     }
 
     @PutMapping("/{applicationId}/status")
-    public ResponseEntity<ApiResponse<Void>> updateStatus(
+    public ResponseEntity<ApiResponse<String>> updateStatus(
             @PathVariable Long applicationId,
             @RequestBody UpdateStatusRequest request) {
-        return ResponseEntity.ok(jobApplicationService.updateStatus(applicationId, request));
+        return ResponseEntity.ok(
+                applicationService.updateStatus(applicationId, request));
     }
 }

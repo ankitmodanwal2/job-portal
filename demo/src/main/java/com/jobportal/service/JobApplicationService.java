@@ -25,119 +25,77 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JobApplicationService {
 
-    private final JobApplicationRepository jobApplicationRepository;
+    private final JobApplicationRepository applicationRepository;
     private final JobRepository jobRepository;
     private final UserRepository userRepository;
 
-    public ApiResponse<Void> apply(ApplyJobRequest request) {
+    public ApiResponse<String> applyForJob(ApplyJobRequest request) {
 
-        // Get authenticated user from security context
-        String email = getAuthenticatedUserEmail();
-
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        if (applicationRepository.existsByJobIdAndUserId(
+                request.getJobId(), request.getUserId())) {
+            throw new RuntimeException("Already applied for this job");
+        }
 
         Job job = jobRepository.findById(request.getJobId())
                 .orElseThrow(() -> new ResourceNotFoundException("Job not found"));
 
-        if(jobApplicationRepository.existsByJobIdAndUserId(request.getJobId(), user.getId())) {
-            throw new RuntimeException("Already applied for this job");
-        }
+        User user = userRepository.findById(request.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        JobApplication jobApplication = new JobApplication();
-        jobApplication.setJob(job);
-        jobApplication.setUser(user);
-        jobApplication.setStatus(ApplicationStatus.APPLIED);
-        jobApplication.setAppliedAt(LocalDateTime.now());
+        JobApplication application = new JobApplication();
+        application.setJob(job);
+        application.setUser(user);
+        application.setStatus(ApplicationStatus.APPLIED);
+        application.setAppliedAt(LocalDateTime.now());
 
-        jobApplicationRepository.save(jobApplication);
+        applicationRepository.save(application);
+
         return ApiResponse.success("Job applied successfully", null);
     }
 
-    public ApiResponse<List<ApplicationResponse>> getApplicationByUser(Long userId) {
+    public ApiResponse<List<ApplicationResponse>> getApplicationsByUser(Long userId) {
 
-        // Optional: Add authorization check
-        String email = getAuthenticatedUserEmail();
-        User currentUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        // Only allow users to see their own applications or employers to see all
-        if (!currentUser.getId().equals(userId) &&
-                !currentUser.getRole().name().equals("EMPLOYER")) {
-            throw new RuntimeException("Unauthorized to view these applications");
-        }
-
-        List<ApplicationResponse> responses = jobApplicationRepository.findByUserId(userId)
+        List<ApplicationResponse> responses = applicationRepository
+                .findByUserId(userId)
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
-        return ApiResponse.success("List of applications fetched successfully", responses);
+
+        return ApiResponse.success("Applications fetched", responses);
     }
 
-    public ApiResponse<List<ApplicationResponse>> getApplicationByJob(Long jobId) {
+    public ApiResponse<List<ApplicationResponse>> getApplicationsByJob(Long jobId) {
 
-        // Optional: Add authorization check - only job poster should see applications
-        String email = getAuthenticatedUserEmail();
-        User currentUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> new ResourceNotFoundException("Job not found"));
-
-        if (!job.getPostedBy().getId().equals(currentUser.getId())) {
-            throw new RuntimeException("Unauthorized to view applications for this job");
-        }
-
-        List<ApplicationResponse> responses = jobApplicationRepository.findByJobId(jobId)
+        List<ApplicationResponse> responses = applicationRepository
+                .findByJobId(jobId)
                 .stream()
                 .map(this::mapToResponse)
                 .toList();
-        return ApiResponse.success("List of applications fetched successfully", responses);
+
+        return ApiResponse.success("Applications fetched", responses);
     }
 
-    public ApiResponse<Void> updateStatus(Long applicationId, UpdateStatusRequest request) {
+    public ApiResponse<String> updateStatus(
+            Long applicationId, UpdateStatusRequest request) {
 
-        // Optional: Add authorization check - only job poster can update status
-        String email = getAuthenticatedUserEmail();
-        User currentUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        JobApplication application = jobApplicationRepository.findById(applicationId)
-                .orElseThrow(() -> new ResourceNotFoundException("Application not found"));
-
-        if (!application.getJob().getPostedBy().getId().equals(currentUser.getId())) {
-            throw new RuntimeException("Unauthorized to update this application");
-        }
+        JobApplication application = applicationRepository.findById(applicationId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Application not found"));
 
         application.setStatus(request.getStatus());
-        jobApplicationRepository.save(application);
-        return ApiResponse.success("Application status updated successfully", null);
+        applicationRepository.save(application);
+
+        return ApiResponse.success("Application status updated", null);
     }
 
-    private ApplicationResponse mapToResponse(JobApplication jobApplication) {
-        ApplicationResponse applicationResponse = new ApplicationResponse();
-        applicationResponse.setApplicationId(jobApplication.getId());
-        applicationResponse.setJobTitle(jobApplication.getJob().getTitle());
-        applicationResponse.setCompanyName(jobApplication.getJob().getCompanyName());
-        applicationResponse.setApplicantName(jobApplication.getUser().getName());
-        applicationResponse.setStatus(jobApplication.getStatus());
-        applicationResponse.setAppliedAt(jobApplication.getAppliedAt());
-        return applicationResponse;
-    }
-    public ApiResponse<List<ApplicationResponse>> getMyApplications() {
-        String email = getAuthenticatedUserEmail();
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        List<ApplicationResponse> responses = jobApplicationRepository.findByUserId(user.getId())
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
-        return ApiResponse.success("List of applications fetched successfully", responses);
-    }
-
-    private String getAuthenticatedUserEmail() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication.getName();
+    private ApplicationResponse mapToResponse(JobApplication app) {
+        return new ApplicationResponse(
+                app.getId(),
+                app.getJob().getTitle(),
+                app.getJob().getCompanyName(),
+                app.getUser().getName(),
+                app.getStatus(),
+                app.getAppliedAt()
+        );
     }
 }

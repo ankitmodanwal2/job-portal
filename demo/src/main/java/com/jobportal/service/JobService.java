@@ -28,10 +28,7 @@ public class JobService {
 
     public ApiResponse<JobResponse> createJob(JobRequest request) {
 
-        // Get authenticated user from security context
-        String email = getAuthenticatedUserEmail();
-
-        User employer = userRepository.findByEmail(email)
+        User employer = userRepository.findById(request.getPostedBy())
                 .orElseThrow(() -> new ResourceNotFoundException("Employer not found"));
 
         Job job = new Job();
@@ -100,10 +97,5 @@ public class JobService {
         jobResponse.setPostedBy(job.getPostedBy().getName());
         jobResponse.setCreatedAt(job.getCreatedAt());
         return jobResponse;
-    }
-
-    private String getAuthenticatedUserEmail() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication.getName(); // Returns email since we use email as username
     }
 }

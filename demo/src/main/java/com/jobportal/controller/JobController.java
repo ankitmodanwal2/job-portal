@@ -20,7 +20,6 @@ public class JobController {
 
     private final JobService jobService;
 
-    @PreAuthorize("hasRole('ROLE_EMPLOYER')")
     @PostMapping
     public ResponseEntity<ApiResponse<JobResponse>> createJob(@RequestBody JobRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(jobService.createJob(request));

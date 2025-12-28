@@ -11,5 +11,5 @@ public class JobRequest {
     private String companyName;
     private Double salary;
     private JobType jobType;
-    // REMOVED: employerId - will be extracted from JWT token
+    private Long postedBy;
 }

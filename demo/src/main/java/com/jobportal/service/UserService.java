@@ -8,7 +8,6 @@ import com.jobportal.exception.InvalidCredentialsException;
 import com.jobportal.repository.UserRepository;
 import com.jobportal.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -37,7 +36,7 @@ public class UserService {
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
-        if(request.getPassword().equals(user.getPassword())) {
+        if(!request.getPassword().equals(user.getPassword())) {
             throw new InvalidCredentialsException("Invalid email or password");
         }
 

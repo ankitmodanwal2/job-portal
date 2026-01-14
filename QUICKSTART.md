@@ -133,7 +133,7 @@ cd application-service && mvn spring-boot:run
 
 **Terminal 5 - API Gateway:**
 ```bash
-cd api-gateway && mvn spring-boot:run
+cd gateway-service && mvn spring-boot:run
 ```
 
 ### Step 6: Verify

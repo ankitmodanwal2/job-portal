@@ -30,8 +30,8 @@ docker-compose --version
 
 ### Step 1: Clone and Setup
 ```bash
-git clone https://github.com/your-username/job-portal-microservices.git
-cd job-portal-microservices
+git clone https://github.com/your-username/job-portal.git
+cd job-portal
 
 # Set JWT secret
 export JWT_SECRET="your-secret-key-at-least-32-characters-long"
@@ -79,8 +79,8 @@ curl -X GET http://localhost:8080/api/jobs \
 
 ### Step 1: Clone Repository
 ```bash
-git clone https://github.com/your-username/job-portal-microservices.git
-cd job-portal-microservices
+git clone https://github.com/your-username/job-portal.git
+cd job-portal
 ```
 
 ### Step 2: Setup Databases
@@ -407,8 +407,8 @@ docker-compose restart user-service
 ## 📞 Need Help?
 
 - 📖 [Full README](README.md)
-- 🐛 [Report Issues](https://github.com/your-username/job-portal-microservices/issues)
-- 💬 [Discussions](https://github.com/your-username/job-portal-microservices/discussions)
+- 🐛 [Report Issues](https://github.com/ankitmodanwal2/job-portal/issues)
+- 💬 [Discussions](https://github.com/ankitmodanwal2/job-portal/discussions)
 
 ---
 

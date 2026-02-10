@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: job-portal-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: user_db
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: Esoft@1234
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - job-portal-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 20s
+      retries: 10
+
+  eureka-server:
+    build: ./eureka-server
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - job-portal-network
+    restart: always
+
+  gateway-service:
+    build: ./gateway-service
+    container_name: gateway-service
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "8080:8080"
+    depends_on:
+      - eureka-server
+    networks:
+      - job-portal-network
+    restart: always
+
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/user_db
+      SPRING_DATASOURCE_USERNAME: myuser
+      SPRING_DATASOURCE_PASSWORD: Esoft@1234
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mysql
+      - eureka-server
+    networks:
+      - job-portal-network
+    restart: always
+
+  job-service:
+    build: ./job-service
+    container_name: job-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/job_db
+      SPRING_DATASOURCE_USERNAME: myuser
+      SPRING_DATASOURCE_PASSWORD: Esoft@1234
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    ports:
+      - "8082:8082"
+    depends_on:
+      - mysql
+      - eureka-server
+    networks:
+      - job-portal-network
+    restart: always
+
+  application-service:
+    build: ./application-service
+    container_name: application-service
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/application_db
+      SPRING_DATASOURCE_USERNAME: myuser
+      SPRING_DATASOURCE_PASSWORD: Esoft@1234
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    ports:
+      - "8083:8083"
+    depends_on:
+      - mysql
+      - eureka-server
+    networks:
+      - job-portal-network
+    restart: always
+
+volumes:
+  mysql-data:
+
+networks:
+  job-portal-network:
+    driver: bridge

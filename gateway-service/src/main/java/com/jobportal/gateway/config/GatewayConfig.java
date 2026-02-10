@@ -9,5 +9,5 @@ import org.springframework.context.annotation.Configuration;
 public class GatewayConfig {
 
     // Additional custom route configurations can be added here if needed
-    // The main routes are configured in application.yml
+    // The main routes are configured in application.properties
 }

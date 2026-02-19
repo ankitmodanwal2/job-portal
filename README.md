@@ -257,7 +257,7 @@ job-portal-microservices/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/job-portal.git
+git clone https://github.com/ankitmodanwal2/job-portal.git
 cd job-portal
 ```
 
